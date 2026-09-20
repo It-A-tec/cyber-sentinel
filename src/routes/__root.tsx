@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { ShieldMark } from "../components/ShieldMark";
 
 function NotFoundComponent() {
   return (
@@ -77,19 +78,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "CyberShield — Know the threat before it becomes a breach" },
+      {
+        name: "description",
+        content: "Analyze suspicious links and messages and understand the risks before interacting with them.",
+      },
+      { property: "og:title", content: "CyberShield" },
+      {
+        property: "og:description",
+        content: "Analyze suspicious links and messages and understand the risks before interacting with them.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap",
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
@@ -99,6 +107,40 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   notFoundComponent: NotFoundComponent,
   errorComponent: ErrorComponent,
 });
+
+function SiteHeader() {
+  return (
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 py-3.5">
+        <Link to="/" className="flex min-w-0 items-center gap-2.5">
+          <ShieldMark className="h-6 w-6 shrink-0 text-primary" />
+          <span className="truncate text-base font-bold tracking-tight">CyberShield</span>
+        </Link>
+        <nav className="flex shrink-0 items-center gap-1.5 text-sm">
+          <Link
+            to="/how-it-works"
+            className="hidden rounded-lg px-3 py-2 text-muted-foreground transition-colors hover:text-foreground sm:block"
+          >
+            How It Works
+          </Link>
+          <Link to="/analyze" className="btn-primary rounded-lg px-4 py-2 text-sm">
+            Analyze
+          </Link>
+        </nav>
+      </div>
+    </header>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="mt-16 border-t border-border/70 py-8">
+      <div className="mx-auto max-w-6xl px-5 text-xs text-muted-foreground">
+        CyberShield · Awareness tool for everyday users. Always verify important requests through an independent channel.
+      </div>
+    </footer>
+  );
+}
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -119,8 +161,14 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="flex min-h-screen flex-col">
+        <SiteHeader />
+        <main className="flex-1">
+          {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+          <Outlet />
+        </main>
+        <SiteFooter />
+      </div>
     </QueryClientProvider>
   );
 }
