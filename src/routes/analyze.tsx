@@ -29,7 +29,7 @@ export const Route = createFileRoute("/analyze")({
       },
     ],
   }),
-  component: Dashboard;
+  component: Dashboard,
 });
 
 const KINDS: { id: InputKind; label: string }[] = [
