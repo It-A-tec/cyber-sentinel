@@ -128,7 +128,7 @@ function Dashboard() {
         </button>
       </header>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section className="glass-card rounded-2xl p-5 sm:p-6">
           <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Input type</span>
           <div className="mt-3 inline-flex w-full rounded-xl border border-border bg-background/60 p-1">
