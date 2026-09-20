@@ -19,82 +19,368 @@ export interface AnalysisResult {
 export interface HistoryEntry {
   id: string;
   label: string;
+  content?: string;
+  kind?: InputKind;
   level: ThreatLevel;
   score: number;
   at: number;
 }
 
 const URL_RE = /\bhttps?:\/\/[^\s<>"']+|\bwww\.[^\s<>"']+/gi;
+const URL_START_RE = /\b(?:https?:\/\/|www\.)/gi;
 const IP_RE = /https?:\/\/(\d{1,3}\.){3}\d{1,3}/i;
-const SHORTENERS = ["bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "buff.ly", "rb.gy", "cutt.ly"];
-const SUSPICIOUS_TLDS = [".zip", ".xyz", ".top", ".click", ".gq", ".tk", ".ml", ".cf", ".ru", ".cn", ".info", ".mov"];
-const BRANDS = ["paypal", "apple", "microsoft", "google", "amazon", "netflix", "facebook", "instagram", "whatsapp", "bank", "hdfc", "sbi", "icici", "dhl", "fedex"];
+const SHORTENERS = [
+  "bit.ly",
+  "tinyurl.com",
+  "t.co",
+  "goo.gl",
+  "ow.ly",
+  "is.gd",
+  "buff.ly",
+  "rb.gy",
+  "cutt.ly",
+];
+const SUSPICIOUS_TLDS = [
+  ".zip",
+  ".xyz",
+  ".top",
+  ".click",
+  ".gq",
+  ".tk",
+  ".ml",
+  ".cf",
+  ".ru",
+  ".cn",
+  ".info",
+  ".mov",
+];
+const BRANDS = [
+  "paypal",
+  "apple",
+  "microsoft",
+  "google",
+  "amazon",
+  "netflix",
+  "facebook",
+  "instagram",
+  "whatsapp",
+  "bank",
+  "hdfc",
+  "sbi",
+  "icici",
+  "dhl",
+  "fedex",
+];
+const EMAIL_RE = /\b[A-Z0-9._%+-]+@([A-Z0-9.-]+\.[A-Z]{2,})\b/gi;
 
 function push(list: Indicator[], label: string, detail: string, weight: number) {
   if (!list.some((i) => i.label === label)) list.push({ label, detail, weight });
 }
 
-function analyzeUrl(raw: string, out: Indicator[]) {
-  const url = raw.trim();
-  let host = "";
+function cleanUrl(raw: string) {
+  return raw.replace(/[),.!?;:\]]+$/, "");
+}
+
+function getHost(raw: string) {
   try {
-    host = new URL(url.startsWith("http") ? url : `http://${url}`).hostname.toLowerCase();
+    return new URL(raw.startsWith("http") ? raw : `http://${raw}`).hostname.toLowerCase();
   } catch {
-    host = url.toLowerCase();
+    return raw.toLowerCase();
+  }
+}
+
+function extractUrls(text: string) {
+  const urls = new Set<string>();
+
+  function add(raw: string) {
+    const url = cleanUrl(raw);
+    if (!url || urls.has(url)) return;
+    urls.add(url);
+
+    let decoded = url;
+    try {
+      decoded = decodeURIComponent(url);
+    } catch {
+      // Keep the original link when malformed encoding prevents decoding.
+    }
+
+    for (const start of decoded.matchAll(URL_START_RE)) {
+      if (start.index > 0 && decoded.slice(0, start.index).endsWith("//")) continue;
+      const nested = decoded.slice(start.index).match(/^\b(?:https?:\/\/|www\.)[^\s<>"']+/i)?.[0];
+      if (nested && nested !== decoded) add(nested);
+    }
   }
 
-  if (/^http:\/\//i.test(url)) push(out, "Insecure connection", "The link uses HTTP instead of HTTPS, so traffic is not encrypted.", 18);
-  if (IP_RE.test(url)) push(out, "IP address instead of domain", "Legitimate services rarely link directly to a raw IP address.", 28);
+  for (const url of text.match(URL_RE) ?? []) add(url);
+  return [...urls];
+}
+
+function analyzeUrl(raw: string, out: Indicator[]) {
+  const url = cleanUrl(raw.trim());
+  const host = getHost(url);
+
+  if (/^http:\/\//i.test(url))
+    push(
+      out,
+      "Insecure connection",
+      "The link uses HTTP instead of HTTPS, so traffic is not encrypted.",
+      18,
+    );
+  if (IP_RE.test(url))
+    push(
+      out,
+      "IP address instead of domain",
+      "Legitimate services rarely link directly to a raw IP address.",
+      28,
+    );
+  if (/https?:\/\/[^/\s]*@/i.test(url))
+    push(
+      out,
+      "Hidden destination",
+      "The link uses an @ symbol to make the real destination harder to spot.",
+      24,
+    );
+  if (/%[0-9a-f]{2}/i.test(url))
+    push(out, "Encoded URL", "Encoded characters can be used to obscure where a link leads.", 10);
 
   const labels = host.split(".").filter(Boolean);
-  if (labels.length >= 4) push(out, "Excessive subdomains", `“${host}” stacks several subdomains, a common way to hide the real destination.`, 20);
+  if (labels.length >= 4)
+    push(
+      out,
+      "Excessive subdomains",
+      `“${host}” stacks several subdomains, a common way to hide the real destination.`,
+      20,
+    );
 
-  if (SHORTENERS.some((s) => host.endsWith(s))) push(out, "Shortened / obfuscated link", "A link shortener hides the true destination until you click it.", 22);
+  if (SHORTENERS.some((s) => host.endsWith(s)))
+    push(
+      out,
+      "Shortened / obfuscated link",
+      "A link shortener hides the true destination until you click it.",
+      22,
+    );
   const tld = SUSPICIOUS_TLDS.find((t) => host.endsWith(t));
-  if (tld) push(out, "Low-reputation domain", `The “${tld}” domain ending is frequently abused in phishing campaigns.`, 16);
+  if (tld)
+    push(
+      out,
+      "Low-reputation domain",
+      `The “${tld}” domain ending is frequently abused in phishing campaigns.`,
+      16,
+    );
 
   const brand = BRANDS.find((b) => host.includes(b));
   if (brand && !new RegExp(`(^|\\.)${brand}\\.(com|net|org|in|co\\.uk)$`).test(host)) {
-    push(out, "Domain mismatch", `The address mentions “${brand}” but is not the official ${brand} domain.`, 30);
+    push(
+      out,
+      "Domain mismatch",
+      `The address mentions “${brand}” but is not the official ${brand} domain.`,
+      30,
+    );
   }
 
-  if (/[0-9]/.test(host) && /[a-z]/.test(host) && /(0|1|3|5)/.test(host) && brand === undefined && labels.length > 1) {
-    push(out, "Unusual characters in domain", "Digits substituted for letters are a classic look-alike trick.", 12);
+  if (
+    /[0-9]/.test(host) &&
+    /[a-z]/.test(host) &&
+    /(0|1|3|5)/.test(host) &&
+    brand === undefined &&
+    labels.length > 1
+  ) {
+    push(
+      out,
+      "Unusual characters in domain",
+      "Digits substituted for letters are a classic look-alike trick.",
+      12,
+    );
   }
-  if (/xn--/.test(host)) push(out, "Unusual characters in domain", "The domain uses punycode, which can disguise look-alike characters.", 24);
-  if (url.length > 90) push(out, "Excessively long URL", "Very long links are often used to bury the real destination.", 12);
-  if (/[?&](redirect|url|next|goto|continue)=/i.test(url)) push(out, "Suspicious redirect", "The link carries a redirect parameter that can forward you elsewhere.", 20);
-  if (/(login|verify|secure|update|account|signin|confirm|wallet|otp)/i.test(url)) push(out, "Credential-harvesting path", "The address points at a login or verification page, typical of phishing.", 16);
+  if (/xn--/.test(host))
+    push(
+      out,
+      "Unusual characters in domain",
+      "The domain uses punycode, which can disguise look-alike characters.",
+      24,
+    );
+  if (url.length > 90)
+    push(
+      out,
+      "Excessively long URL",
+      "Very long links are often used to bury the real destination.",
+      12,
+    );
+  if (/[?&](redirect|url|next|goto|continue)=/i.test(url))
+    push(
+      out,
+      "Suspicious redirect",
+      "The link carries a redirect parameter that can forward you elsewhere.",
+      20,
+    );
+  if (/(login|verify|secure|update|account|signin|confirm|wallet|otp)/i.test(url))
+    push(
+      out,
+      "Credential-harvesting path",
+      "The address points at a login or verification page, typical of phishing.",
+      16,
+    );
+}
+
+function analyzeEmailDomains(text: string, out: Indicator[]) {
+  for (const match of text.matchAll(EMAIL_RE)) {
+    const domain = match[1]?.toLowerCase();
+    if (!domain) continue;
+    const brand = BRANDS.find((name) => domain.includes(name));
+    if (brand && !new RegExp(`(^|\\.)${brand}\\.(com|net|org|in|co\\.uk)$`).test(domain)) {
+      push(
+        out,
+        "Sender domain mismatch",
+        `The sender address mentions “${brand}” but is not an official ${brand} domain.`,
+        30,
+      );
+    }
+  }
 }
 
 const MESSAGE_RULES: { re: RegExp; label: string; detail: string; weight: number }[] = [
-  { re: /\b(urgent|immediately|right now|within 24 hours|last warning|act now|expires today)\b/i, label: "Urgency pressure", detail: "The text pushes you to act fast so you skip normal checks.", weight: 20 },
-  { re: /\b(suspend|suspended|deactivat|blocked|locked|terminat|closed)\b/i, label: "Account suspension threat", detail: "Threatening to close your account is a standard scare tactic.", weight: 22 },
-  { re: /\b(password|passcode|pin|credential|login details)\b/i, label: "Request for credentials", detail: "Legitimate organisations never ask for your password.", weight: 30 },
-  { re: /\b(otp|one[- ]time (code|password)|verification code|2fa code)\b/i, label: "Request for OTP", detail: "Sharing a one-time code hands over full account access.", weight: 32 },
-  { re: /\b(bank account|credit card|cvv|upi|debit card|wire transfer|payment details|iban)\b/i, label: "Request for financial data", detail: "The message asks for payment or banking information.", weight: 28 },
-  { re: /\b(won|winner|prize|lottery|reward|claim your|free gift|cash bonus)\b/i, label: "Prize / reward scam", detail: "Unexpected winnings are one of the oldest scam formats.", weight: 24 },
-  { re: /\b(verify your account|confirm your identity|validate your|re-?activate)\b/i, label: "Potential phishing language", detail: "Verification requests by link are a hallmark of phishing.", weight: 22 },
-  { re: /\b(dear (customer|user|sir\/madam)|valued customer)\b/i, label: "Impersonation language", detail: "Generic greetings suggest a bulk message, not a real contact.", weight: 12 },
-  { re: /\b(ceo|manager|hr team|it (support|helpdesk)|support team)\b.*\b(request|need|asap|gift card)\b/i, label: "Impersonation language", detail: "The sender claims authority to pressure you into acting.", weight: 18 },
-  { re: /[!]{2,}|[A-Z]{6,}/, label: "Unusual characters", detail: "Heavy capitals and exclamation marks are typical of scam blasts.", weight: 8 },
+  {
+    re: /\b(urgent|immediately|right now|within 24 hours|last warning|act now|expires today)\b/i,
+    label: "Urgency pressure",
+    detail: "The text pushes you to act fast so you skip normal checks.",
+    weight: 20,
+  },
+  {
+    re: /\b(suspend|suspended|deactivat|blocked|locked|terminat|closed)\b/i,
+    label: "Account suspension threat",
+    detail: "Threatening to close your account is a standard scare tactic.",
+    weight: 22,
+  },
+  {
+    re: /\b(password|passcode|pin|credential|login details)\b/i,
+    label: "Request for credentials",
+    detail: "Legitimate organisations never ask for your password.",
+    weight: 30,
+  },
+  {
+    re: /\b(otp|one[- ]time (code|password)|verification code|2fa code)\b/i,
+    label: "Request for OTP",
+    detail: "Sharing a one-time code hands over full account access.",
+    weight: 32,
+  },
+  {
+    re: /\b(bank account|credit card|cvv|upi|debit card|wire transfer|payment details|iban)\b/i,
+    label: "Request for financial data",
+    detail: "The message asks for payment or banking information.",
+    weight: 28,
+  },
+  {
+    re: /\b(won|winner|prize|lottery|reward|claim your|free gift|cash bonus)\b/i,
+    label: "Prize / reward scam",
+    detail: "Unexpected winnings are one of the oldest scam formats.",
+    weight: 24,
+  },
+  {
+    re: /\b(verify your account|confirm your (identity|account)|validate your|re-?activate)\b/i,
+    label: "Potential phishing language",
+    detail: "Verification requests by link are a hallmark of phishing.",
+    weight: 22,
+  },
+  {
+    re: /\b(click (here|below|the link)|tap (here|the link)|follow (this )?link)\b/i,
+    label: "Pressure to follow a link",
+    detail:
+      "Scams often direct you to a link instead of asking you to use the official app or website.",
+    weight: 18,
+  },
+  {
+    re: /\b(unusual (activity|login|transaction)|security (alert|notice)|unauthori[sz]ed)\b/i,
+    label: "Security scare tactic",
+    detail:
+      "A surprising security alert is often used to pressure you into acting before you verify it.",
+    weight: 18,
+  },
+  {
+    re: /\b(download|open) (the )?(attachment|file)|\b\S+\.(zip|exe|scr|iso|img)\b/i,
+    label: "Suspicious attachment",
+    detail: "Unexpected files can install malware or lead to a fake sign-in page.",
+    weight: 26,
+  },
+  {
+    re: /\b(gift ?cards?|steam ?cards?|itunes ?cards?)\b/i,
+    label: "Gift card payment request",
+    detail: "Requests for gift cards are a common way for scammers to collect untraceable payment.",
+    weight: 28,
+  },
+  {
+    re: /\b(anydesk|teamviewer|remote access|screen share)\b/i,
+    label: "Remote-access request",
+    detail: "Unsolicited remote-access requests can let a scammer control your device.",
+    weight: 30,
+  },
+  {
+    re: /\b(guaranteed (profit|return)|double your money|crypto giveaway|investment opportunity)\b/i,
+    label: "Investment scam language",
+    detail: "Promises of easy or guaranteed returns are a frequent scam signal.",
+    weight: 24,
+  },
+  {
+    re: /\b(keep this (confidential|secret)|do not tell (anyone|your manager))\b/i,
+    label: "Secrecy pressure",
+    detail: "Scammers often try to stop you from independently verifying their request.",
+    weight: 22,
+  },
+  {
+    re: /\b(dear (customer|user|sir\/madam)|valued customer)\b/i,
+    label: "Impersonation language",
+    detail: "Generic greetings suggest a bulk message, not a real contact.",
+    weight: 12,
+  },
+  {
+    re: /\b(ceo|manager|hr team|it (support|helpdesk)|support team)\b.*\b(request|need|asap|gift card)\b/i,
+    label: "Impersonation language",
+    detail: "The sender claims authority to pressure you into acting.",
+    weight: 18,
+  },
+  {
+    re: /[!]{2,}|[A-Z]{6,}/,
+    label: "Unusual characters",
+    detail: "Heavy capitals and exclamation marks are typical of scam blasts.",
+    weight: 8,
+  },
 ];
 
 export function analyze(content: string, kind: InputKind): AnalysisResult {
   const text = content.trim();
   const indicators: Indicator[] = [];
 
-  const urls = text.match(URL_RE) ?? [];
+  const urls = extractUrls(text);
   if (kind === "url" && urls.length === 0 && text) analyzeUrl(text, indicators);
   urls.forEach((u) => analyzeUrl(u, indicators));
 
   if (kind !== "url" || urls.length > 0) {
-    for (const rule of MESSAGE_RULES) if (rule.re.test(text)) push(indicators, rule.label, rule.detail, rule.weight);
+    for (const rule of MESSAGE_RULES)
+      if (rule.re.test(text)) push(indicators, rule.label, rule.detail, rule.weight);
   }
+  if (kind === "email") analyzeEmailDomains(text, indicators);
   if (kind !== "url" && urls.length > 0) {
-    push(indicators, "Embedded link", "The message contains a link, which scammers use to reach a fake page.", 8);
+    push(
+      indicators,
+      "Embedded link",
+      "The message contains a link, which scammers use to reach a fake page.",
+      8,
+    );
   }
-  if (urls.length > 2) push(indicators, "Suspicious redirects", "Multiple links in one message spread the chance of a bad click.", 10);
+  if (urls.length > 1)
+    push(
+      indicators,
+      "Multiple links",
+      "More than one link makes it harder to verify every destination before you click.",
+      10,
+    );
+  if (new Set(urls.map(getHost)).size > 1) {
+    push(
+      indicators,
+      "Multiple destinations",
+      "The content sends you to different domains, which can be used to hide a redirect chain.",
+      12,
+    );
+  }
 
   const raw = indicators.reduce((s, i) => s + i.weight, 0);
   const score = Math.max(2, Math.min(100, Math.round(100 - Math.min(98, raw * 0.9))));

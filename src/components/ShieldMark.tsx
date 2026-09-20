@@ -7,7 +7,13 @@ export function ShieldMark({ className = "h-7 w-7" }: { className?: string }) {
         strokeWidth="1.6"
         strokeLinejoin="round"
       />
-      <path d="m8.8 12.1 2.3 2.3 4.1-4.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="m8.8 12.1 2.3 2.3 4.1-4.6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

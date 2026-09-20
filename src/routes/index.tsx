@@ -13,7 +13,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "CyberShield — Check before you click" },
       {
         property: "og:description",
-        content: "Analyze suspicious links and messages and understand the risks before interacting with them.",
+        content:
+          "Analyze suspicious links and messages and understand the risks before interacting with them.",
       },
     ],
   }),
@@ -36,8 +37,16 @@ const FEATURES = [
 ];
 
 const STEPS = [
-  { n: "01", t: "Paste", d: "Drop in a link, SMS, WhatsApp message or email you were not expecting." },
-  { n: "02", t: "Analyze", d: "Dozens of link and language rules are scored together into one risk picture." },
+  {
+    n: "01",
+    t: "Paste",
+    d: "Drop in a link, SMS, WhatsApp message or email you were not expecting.",
+  },
+  {
+    n: "02",
+    t: "Analyze",
+    d: "Dozens of link and language rules are scored together into one risk picture.",
+  },
   { n: "03", t: "Understand", d: "Read the flagged indicators and the security score out of 100." },
   { n: "04", t: "Act", d: "Follow the recommendation — verify, ignore, or proceed carefully." },
 ];
@@ -58,10 +67,14 @@ function Landing() {
             <span className="text-gradient">before it becomes a breach.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-            Analyze suspicious links and messages and understand the risks before interacting with them.
+            Analyze suspicious links and messages and understand the risks before interacting with
+            them.
           </p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link to="/analyze" className="btn-primary w-full rounded-xl px-7 py-3.5 text-sm sm:w-auto">
+            <Link
+              to="/analyze"
+              className="btn-primary w-full rounded-xl px-7 py-3.5 text-sm sm:w-auto"
+            >
               Analyze Now
             </Link>
             <Link

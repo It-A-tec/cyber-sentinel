@@ -81,12 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "CyberShield — Know the threat before it becomes a breach" },
       {
         name: "description",
-        content: "Analyze suspicious links and messages and understand the risks before interacting with them.",
+        content:
+          "Analyze suspicious links and messages and understand the risks before interacting with them.",
       },
       { property: "og:title", content: "CyberShield" },
       {
         property: "og:description",
-        content: "Analyze suspicious links and messages and understand the risks before interacting with them.",
+        content:
+          "Analyze suspicious links and messages and understand the risks before interacting with them.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -136,7 +138,8 @@ function SiteFooter() {
   return (
     <footer className="mt-16 border-t border-border/70 py-8">
       <div className="mx-auto max-w-6xl px-5 text-xs text-muted-foreground">
-        CyberShield · Awareness tool for everyday users. Always verify important requests through an independent channel.
+        CyberShield · Awareness tool for everyday users. Always verify important requests through an
+        independent channel.
       </div>
     </footer>
   );

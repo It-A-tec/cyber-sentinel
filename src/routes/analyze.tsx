@@ -25,7 +25,8 @@ export const Route = createFileRoute("/analyze")({
       { property: "og:title", content: "Threat analysis dashboard — CyberShield" },
       {
         property: "og:description",
-        content: "Instant threat level, security score and recommended action for any suspicious link or message.",
+        content:
+          "Instant threat level, security score and recommended action for any suspicious link or message.",
       },
     ],
   }),
@@ -40,8 +41,16 @@ const KINDS: { id: InputKind; label: string }[] = [
 
 const LEVEL_STYLES: Record<ThreatLevel, { text: string; ring: string; bg: string }> = {
   SAFE: { text: "text-success", ring: "stroke-success", bg: "bg-success/10 border-success/40" },
-  SUSPICIOUS: { text: "text-warning", ring: "stroke-warning", bg: "bg-warning/10 border-warning/40" },
-  UNSAFE: { text: "text-destructive", ring: "stroke-destructive", bg: "bg-destructive/10 border-destructive/40" },
+  SUSPICIOUS: {
+    text: "text-warning",
+    ring: "stroke-warning",
+    bg: "bg-warning/10 border-warning/40",
+  },
+  UNSAFE: {
+    text: "text-destructive",
+    ring: "stroke-destructive",
+    bg: "bg-destructive/10 border-destructive/40",
+  },
 };
 
 function ScoreRing({ score, level }: { score: number; level: ThreatLevel }) {
@@ -89,6 +98,8 @@ function Dashboard() {
       const entry: HistoryEntry = {
         id: `${Date.now()}`,
         label: shortLabel(value),
+        content: value,
+        kind,
         level: res.level,
         score: res.score,
         at: Date.now(),
@@ -107,6 +118,18 @@ function Dashboard() {
     saveHistory([]);
   }
 
+  function reloadHistoryEntry(entry: HistoryEntry) {
+    const value = entry.content ?? entry.label;
+    if (!value) return;
+
+    const nextKind = entry.kind ?? (/^(https?:\/\/|www\.)/i.test(value.trim()) ? "url" : "message");
+    const res = analyze(value, nextKind);
+    setKind(nextKind);
+    setContent(value);
+    setResult(res);
+    setAnalyzed(value);
+  }
+
   const styles = useMemo(() => (result ? LEVEL_STYLES[result.level] : null), [result]);
 
   return (
@@ -114,7 +137,9 @@ function Dashboard() {
       <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 sm:flex sm:justify-between">
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-bold sm:text-3xl">Threat analysis</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Paste anything suspicious — we'll explain the risk.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Paste anything suspicious — we'll explain the risk.
+          </p>
         </div>
         <button
           onClick={() => {
@@ -130,14 +155,18 @@ function Dashboard() {
 
       <div className="mt-8 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <section className="glass-card rounded-2xl p-5 sm:p-6">
-          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Input type</span>
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            Input type
+          </span>
           <div className="mt-3 inline-flex w-full rounded-xl border border-border bg-background/60 p-1">
             {KINDS.map((k) => (
               <button
                 key={k.id}
                 onClick={() => setKind(k.id)}
                 className={`flex-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                  kind === k.id ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"
+                  kind === k.id
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {k.label}
@@ -182,7 +211,8 @@ function Dashboard() {
           {!result ? (
             <div className="flex h-full min-h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card/25 p-8 text-center">
               <p className="text-sm text-muted-foreground">
-                Your result appears here: threat level, security score, detected indicators and a recommended action.
+                Your result appears here: threat level, security score, detected indicators and a
+                recommended action.
               </p>
             </div>
           ) : (
@@ -190,29 +220,43 @@ function Dashboard() {
               <div className={`rounded-2xl border p-5 sm:p-6 ${styles!.bg}`}>
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
                   <div className="min-w-0">
-                    <span className="text-xs uppercase tracking-wider text-muted-foreground">Threat level</span>
-                    <p className={`font-mono text-3xl font-bold sm:text-4xl ${styles!.text}`}>{result.level}</p>
+                    <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Threat level
+                    </span>
+                    <p className={`font-mono text-3xl font-bold sm:text-4xl ${styles!.text}`}>
+                      {result.level}
+                    </p>
                     <p className="mt-2 text-sm text-muted-foreground">{result.summary}</p>
                   </div>
                   <ScoreRing score={result.score} level={result.level} />
                 </div>
                 <div className="mt-4 grid gap-3 border-t border-border/60 pt-4 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Threat confidence</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Threat confidence
+                    </p>
                     <p className="font-mono text-lg font-semibold">{result.confidence}%</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Security score</p>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Security score
+                    </p>
                     <p className="font-mono text-lg font-semibold">{result.score}/100</p>
                     <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-secondary">
                       <div
                         className={`h-full rounded-full ${
-                          result.level === "SAFE" ? "bg-success" : result.level === "SUSPICIOUS" ? "bg-warning" : "bg-destructive"
+                          result.level === "SAFE"
+                            ? "bg-success"
+                            : result.level === "SUSPICIOUS"
+                              ? "bg-warning"
+                              : "bg-destructive"
                         }`}
                         style={{ width: `${result.score}%`, transition: "width .7s ease" }}
                       />
                     </div>
-                    <p className="mt-1.5 text-xs text-muted-foreground">Lower scores indicate higher potential risk.</p>
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Lower scores indicate higher potential risk.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -226,9 +270,14 @@ function Dashboard() {
                 ) : (
                   <div className="mt-4 grid gap-3 sm:grid-cols-2">
                     {result.indicators.map((i) => (
-                      <div key={i.label} className="rounded-xl border border-border bg-background/50 p-3">
+                      <div
+                        key={i.label}
+                        className="rounded-xl border border-border bg-background/50 p-3"
+                      >
                         <p className="text-sm font-semibold">{i.label}</p>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{i.detail}</p>
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                          {i.detail}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -238,7 +287,9 @@ function Dashboard() {
               <div className="glass-card rounded-2xl p-5 sm:p-6">
                 <h2 className="text-base font-semibold">Recommended action</h2>
                 <p className="mt-2 text-sm text-muted-foreground">{result.recommendation}</p>
-                <p className="mt-3 truncate font-mono text-xs text-muted-foreground">Checked: {shortLabel(analyzed)}</p>
+                <p className="mt-3 truncate font-mono text-xs text-muted-foreground">
+                  Checked: {shortLabel(analyzed)}
+                </p>
               </div>
             </div>
           )}
@@ -249,13 +300,18 @@ function Dashboard() {
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4">
           <h2 className="truncate text-base font-semibold">Recent checks</h2>
           {history.length > 0 && (
-            <button onClick={clearHistory} className="shrink-0 text-xs text-muted-foreground hover:text-foreground">
+            <button
+              onClick={clearHistory}
+              className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+            >
               Clear history
             </button>
           )}
         </div>
         {history.length === 0 ? (
-          <p className="mt-3 text-sm text-muted-foreground">Your analysis history will appear here, stored only on this device.</p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Your analysis history will appear here, stored only on this device.
+          </p>
         ) : (
           <div className="mt-4 overflow-hidden rounded-xl border border-border">
             <table className="w-full text-left text-sm">
@@ -270,10 +326,27 @@ function Dashboard() {
               <tbody>
                 {history.map((h) => (
                   <tr key={h.id} className="border-t border-border">
-                    <td className="max-w-[10rem] truncate px-3 py-2.5 font-mono text-xs sm:max-w-xs">{h.label}</td>
-                    <td className={`px-3 py-2.5 font-mono text-xs font-bold ${LEVEL_STYLES[h.level].text}`}>{h.level}</td>
-                    <td className="hidden px-3 py-2.5 font-mono text-xs sm:table-cell">{h.score}/100</td>
-                    <td className="hidden px-3 py-2.5 text-xs text-muted-foreground sm:table-cell">{timeAgo(h.at)}</td>
+                    <td className="max-w-[10rem] px-3 py-2.5 font-mono text-xs sm:max-w-xs">
+                      <button
+                        type="button"
+                        onClick={() => reloadHistoryEntry(h)}
+                        className="block w-full truncate text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        title="Reload this check"
+                      >
+                        {h.label}
+                      </button>
+                    </td>
+                    <td
+                      className={`px-3 py-2.5 font-mono text-xs font-bold ${LEVEL_STYLES[h.level].text}`}
+                    >
+                      {h.level}
+                    </td>
+                    <td className="hidden px-3 py-2.5 font-mono text-xs sm:table-cell">
+                      {h.score}/100
+                    </td>
+                    <td className="hidden px-3 py-2.5 text-xs text-muted-foreground sm:table-cell">
+                      {timeAgo(h.at)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

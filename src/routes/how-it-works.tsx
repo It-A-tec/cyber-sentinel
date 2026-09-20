@@ -12,7 +12,8 @@ export const Route = createFileRoute("/how-it-works")({
       { property: "og:title", content: "How CyberShield works" },
       {
         property: "og:description",
-        content: "The link and language signals behind every CyberShield verdict, explained simply.",
+        content:
+          "The link and language signals behind every CyberShield verdict, explained simply.",
       },
     ],
   }),
@@ -43,8 +44,16 @@ const TEXT_SIGNALS = [
 
 const LEVELS = [
   { l: "SAFE", c: "text-success", d: "No obvious indicators of malicious activity were found." },
-  { l: "SUSPICIOUS", c: "text-warning", d: "Warning signs were detected — verify the source before acting." },
-  { l: "UNSAFE", c: "text-destructive", d: "Strong indicators of phishing or malicious behaviour were detected." },
+  {
+    l: "SUSPICIOUS",
+    c: "text-warning",
+    d: "Warning signs were detected — verify the source before acting.",
+  },
+  {
+    l: "UNSAFE",
+    c: "text-destructive",
+    d: "Strong indicators of phishing or malicious behaviour were detected.",
+  },
 ];
 
 function HowItWorks() {
@@ -52,8 +61,9 @@ function HowItWorks() {
     <div className="mx-auto max-w-4xl px-5 py-14">
       <h1 className="text-3xl font-bold sm:text-4xl">How CyberShield works</h1>
       <p className="mt-4 max-w-2xl text-muted-foreground">
-        CyberShield reads what you paste and scores it against dozens of known phishing and scam patterns. Each matching
-        signal adds risk; the combined risk becomes a security score out of 100 and a plain threat level.
+        CyberShield reads what you paste and scores it against dozens of known phishing and scam
+        patterns. Each matching signal adds risk; the combined risk becomes a security score out of
+        100 and a plain threat level.
       </p>
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -94,8 +104,8 @@ function HowItWorks() {
       <div className="mt-10 glass-card rounded-2xl p-6">
         <h2 className="text-lg font-semibold">Privacy</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Analysis runs inside your browser. Your content is analyzed only to generate the security assessment, and your
-          recent checks are stored locally on your own device — never uploaded.
+          Analysis runs inside your browser. Your content is analyzed only to generate the security
+          assessment, and your recent checks are stored locally on your own device — never uploaded.
         </p>
       </div>
 
