@@ -1,495 +1,360 @@
-# Cyber Sentinel
+# 🛡️ CyberShield
 
-PRD — CyberShield
+### Know the threat before it becomes a breach.
 
-1. Product Overview
+CyberShield is a lightweight cybersecurity analysis tool designed to help users identify potentially dangerous URLs, phishing attempts, scam messages, and suspicious email content before interacting with them.
 
-Product Name: CyberShield
+It analyzes user-provided content, detects common threat indicators, generates a security score, and explains the detected risks in plain language.
 
-Tagline:
-“Know the threat before it becomes a breach.”
+> **HackDay 1.0 — Tech for a Better Tomorrow**
 
-CyberShield is a modern web application that helps users identify potentially dangerous messages, URLs, and text-based content before interacting with them.
+---
 
-The application analyzes submitted content and provides a simple Safe / Suspicious / Unsafe result with an explanation of the detected risks.
+## 🚨 Problem
 
-The goal is to make basic cybersecurity awareness accessible to ordinary users without requiring technical knowledge.
+Phishing and online scams increasingly rely on social engineering rather than sophisticated technical attacks.
 
-2. Problem
+A suspicious message may use:
 
-People regularly receive suspicious links and messages through email, SMS, WhatsApp, social media, and other platforms.
+- Urgent language
+- Fake account-verification requests
+- Credential or OTP harvesting
+- Impersonation
+- Suspicious links
+- URL redirects
+- Attachment-based scams
+- Financial or investment promises
+- Gift-card/reward scams
+- Requests for secrecy
+
+For many users, identifying these warning signs is difficult.
+
+CyberShield aims to make the first layer of threat awareness simple: **paste it, analyze it, understand the risk.**
+
+---
+
+## 💡 Solution
 
-Many users cannot easily determine whether a message or URL is legitimate.
+CyberShield provides a simple interface where users can submit a:
 
-Existing cybersecurity tools can be complicated for non-technical users.
+- 🌐 URL
+- 💬 Message
+- 📧 Email
+
+The system analyzes the submitted content and returns:
 
-This creates a gap between sophisticated security technology and everyday users.
+### 🟢 SAFE
+No significant threat indicators were detected by the current analysis rules.
 
-3. Target Users
+### 🟡 SUSPICIOUS
+Potential warning signs were detected and the user should investigate further before interacting.
 
-Primary Users
+### 🔴 UNSAFE
+Multiple or high-risk indicators were detected. The user should avoid interacting with the content.
 
-Students
+The result also includes a **security score, threat confidence, detected indicators, explanation, and recommended action.**
 
-General internet users
+---
 
-Small businesses
+## ⚙️ How It Works
 
-People with limited cybersecurity knowledge
+```text
+          User Input
+              │
+              ▼
+     ┌──────────────────┐
+     │  Content Parser  │
+     └────────┬─────────┘
+              │
+              ▼
+     ┌──────────────────┐
+     │ Threat Detection │
+     │     Engine       │
+     └────────┬─────────┘
+              │
+       ┌──────┴──────┐
+       ▼             ▼
+   URL Analysis   Message Analysis
+       │             │
+       └──────┬──────┘
+              ▼
+       Risk Calculation
+              │
+              ▼
+     ┌──────────────────┐
+     │ Security Score   │
+     │ + Threat Level   │
+     └────────┬─────────┘
+              │
+              ▼
+      Explanation +
+      Recommended Action
+```
 
-Secondary Users
+---
 
-Developers testing suspicious URLs
+## 🔍 Detection Capabilities
 
-Employees checking potentially dangerous messages
+CyberShield currently checks for multiple indicators, including:
 
-4. Core Solution
+### URL-related indicators
 
-CyberShield provides a simple interface where users can paste:
+- HTTP connections
+- Raw IP addresses
+- Suspicious or risky domains
+- Punycode / encoded domains
+- URL shorteners
+- Nested or encoded URLs
+- Multiple destinations
+- Redirect-style URLs
+- `@`-obfuscated URLs
+- Suspicious URL parameters
+- Credential-related patterns
 
-A URL
+### Message & email indicators
 
-A suspicious message
+- Urgency and pressure tactics
+- Credential harvesting
+- OTP requests
+- Account verification scams
+- Financial threats
+- Rewards and gift-card scams
+- Investment scams
+- Remote-access requests
+- Suspicious attachments
+- Impersonation patterns
+- Sender/domain mismatches
+- Requests for secrecy
+- Multiple suspicious destinations
 
-An email/message containing a link
+---
 
-The system analyzes the submitted content and produces:
+## 📊 Risk Analysis
 
-SAFE
+CyberShield produces a security score from **0–100** based on detected indicators.
 
-The content does not show obvious indicators of malicious activity.
+The interface presents:
 
-SUSPICIOUS
+- **Security Score**
+- **Threat Confidence**
+- **Threat Verdict**
+- **Detected Risk Indicators**
+- **Plain-English Explanation**
+- **Recommended Action**
 
-Potential warning signs were detected and the user should verify the source.
+This helps users understand **why** something was flagged instead of receiving only a simple warning.
 
-UNSAFE
+---
 
-Strong indicators of phishing, malicious behavior, or other security risks were detected.
+## 🕘 Recent Checks
 
-The result must also explain why the content received that classification.
+CyberShield keeps recent analyses locally so users can revisit previous checks.
 
-5. Main User Flow
+Selecting a recent check reloads its original input and runs the analyzer again.
 
-Step 1 — Landing Page
+No external account is required for this functionality.
 
-Display:
+---
 
-CyberShield
+## 🎨 User Experience
 
-“Check before you click.”
+CyberShield is designed around a simple workflow:
 
-Short explanation:
-
-Analyze suspicious links and messages and understand the risks before interacting with them.
-
-Primary CTA:
-
-Analyze Now
-
-Secondary CTA:
-
-How It Works
-
-Step 2 — Analysis Dashboard
-
-Create a clean dashboard containing:
-
-Input Type
-
-Three selectable options:
-
-URL
-
-Message
-
-Email
-
-Input Box
-
-Large textarea/input field.
-
-Placeholder:
-
-Paste a suspicious URL or message here...
-
-Analyze Button
-
-Analyze Threat
-
-Add a small privacy message:
-
-Your content is analyzed only to generate the security assessment.
-
-6. Analysis Results
-
-After clicking Analyze Threat, display a result card.
-
-The result must prominently show:
-
-Threat Level
-
-One of:
-
-SAFE
-
-SUSPICIOUS
-
-UNSAFE
-
-Also show a numerical confidence percentage.
-
-Example:
-
-Threat Confidence: 87%
-
-7. Threat Explanation
-
-Display a section:
-
-Why was this flagged?
-
-Show detected indicators such as:
-
-Suspicious URL structure
-
-Unknown domain
-
-Urgency/manipulation language
-
-Request for credentials
-
-Suspicious redirects
-
-Domain mismatch
-
-Unusual characters
-
-Potential phishing language
-
-Each indicator should appear as a small card/chip.
-
-8. Security Score
-
-Create a visual security score:
-
-Security Score: 28/100
-
-Use a circular or horizontal progress indicator.
-
-Below it:
-
-Lower scores indicate higher potential risk.
-
-9. Recommended Action
-
-Every result should provide an actionable recommendation.
-
-Examples:
-
-SAFE
-
-No obvious threats were detected. Continue to remain cautious.
-
-SUSPICIOUS
-
-Do not provide credentials or financial information until you verify the sender and destination.
-
-UNSAFE
-
-Avoid opening the link or responding to the message. Verify the sender through an independent channel.
-
-10. Example Analysis
-
-Include a demo/example button:
-
-Try Example
-
-When clicked, populate the input box with a realistic phishing-style example.
-
-Example:
-
-“URGENT! Your account will be suspended today. Verify your account immediately: http://example.com/verify”
-
-The demo should produce:
-
-UNSAFE
-
-with several detected indicators.
-
-This allows judges to immediately understand the product without needing to invent their own test input.
-
-11. Dashboard
-
-Add a simple analysis history section.
-
-Display:
-
-ContentResultScoreTimesuspicious-login.comUNSAFE18/100Just nowexample.orgSAFE91/1005 min ago
-
-For the hackathon MVP, history can be stored locally in the browser.
-
-No authentication is required.
-
-12. Technology
-
-Frontend:
-
-React
-
-TypeScript
-
-Tailwind CSS
-
-Modern component-based architecture
-
-Backend/API:
-
-Use a lightweight API architecture where required.
-
-The application should be structured so that a real threat-intelligence API or machine-learning model can be integrated later.
-
-For the hackathon prototype, the analysis engine may use rule-based detection and/or an AI API.
-
-13. Detection Logic
-
-The MVP should detect common indicators such as:
-
-URL indicators
-
-HTTP instead of HTTPS
-
-Suspicious domains
-
-Excessive subdomains
-
-IP addresses used instead of domains
-
-Suspicious URL parameters
-
-URL obfuscation
-
-Excessively long URLs
-
-Message indicators
-
-Urgency
-
-Threats of account suspension
-
-Requests for passwords
-
-Requests for OTPs
-
-Requests for financial information
-
-Suspicious links
-
-Impersonation language
-
-Prize/reward scams
-
-The analysis should combine multiple indicators into a risk score.
-
-14. UI/UX Requirements
-
-The interface should look like a modern cybersecurity product.
-
-Design
-
-Dark cybersecurity-inspired theme
-
-Clean typography
-
-Subtle gradients
-
-Glass/modern cards
-
-Clear visual hierarchy
-
-Minimal animations
-
-Responsive design
-
-Do NOT overcrowd the dashboard.
-
-The primary action should always be obvious:
-
+```text
 Paste → Analyze → Understand → Act
+```
 
-15. Responsive Design
+The interface includes:
 
-The application must work properly on:
+- Dark cybersecurity-focused UI
+- Responsive layout
+- Animated security score
+- Clear SAFE / SUSPICIOUS / UNSAFE verdicts
+- Risk indicator cards
+- Recent analysis history
+- Educational "How It Works" section
+- Mobile-friendly interface
 
-Desktop
+---
 
-Laptop
+## 🛠️ Technology
 
-Tablet
+### Frontend
 
-Mobile
+- React
+- TypeScript
+- TanStack Start
+- TanStack Router
+- Vite
 
-On mobile:
+### Styling & UI
 
-Stack cards vertically
+- CSS
+- Responsive design
+- Custom cybersecurity-themed interface
 
-Make the input box full width
+### Analysis
 
-Keep the Analyze button easily accessible
+CyberShield currently uses a **rule-based threat analysis engine** designed to detect recognizable phishing and scam indicators.
 
-Avoid horizontal scrolling
+This approach keeps the application lightweight, transparent, and fast while providing understandable explanations for each detected indicator.
 
-16. Important Product Principles
+### Development
 
-Explainability
+- Git
+- GitHub
+- Vercel
+- VS Code
+- AI-assisted development tools
 
-Do not simply say:
+---
 
-“This is unsafe.”
+## 🌐 Live Demo
 
-Explain the detected indicators.
+**CyberShield:**  
+https://cyber-sentinel-peach.vercel.app/
 
-Simplicity
+**Analyzer:**  
+https://cyber-sentinel-peach.vercel.app/analyze
 
-A non-technical user should understand the result within seconds.
+---
 
-Actionability
+## 💻 Run Locally
 
-Every result should tell the user what to do next.
+### 1. Clone the repository
 
-Privacy
+```bash
+git clone https://github.com/It-A-tec/cyber-sentinel.git
+```
 
-Do not display or permanently store sensitive user input in the UI.
+### 2. Enter the project
 
-17. MVP Scope
+```bash
+cd cyber-sentinel
+```
 
-The hackathon MVP MUST include:
+### 3. Install dependencies
 
-Landing page
+```bash
+npm install
+```
 
-Analysis dashboard
+### 4. Start the development server
 
-URL/message input
-
-Threat classification
-
-Security score
-
-Threat indicators
-
-Explanation
-
-Recommended action
-
-Example/demo input
-
-Analysis history
-
-Responsive design
-
-Do NOT add unnecessary features such as:
-
-User accounts
-
-Complex admin panels
-
-Social features
-
-Payment systems
-
-Chat functionality
-
-Large databases
-
-18. Future Scalability
-
-Future versions could integrate:
-
-Google Safe Browsing
-
-VirusTotal
-
-Domain reputation APIs
-
-WHOIS information
-
-Real-time threat intelligence
-
-Browser extension
-
-Email security integration
-
-WhatsApp/message scanning
-
-ML-based phishing detection
-
-Organization-wide security dashboards
-
-These should be presented as future possibilities, not required for the MVP.
-
-19. Success Criteria
-
-The prototype is successful if a judge can:
-
-Open the website.
-
-Understand the product within 10 seconds.
-
-Paste a suspicious message or URL.
-
-Click Analyze.
-
-Receive a clear threat classification.
-
-Understand why it was flagged.
-
-Know what action to take.
-
-Test another example.
-
-Use the website comfortably on mobile and desktop.
-
-20. Lovable Build Instructions
-
-Build the complete responsive React/TypeScript web application based on this PRD.
-
-Prioritize a polished working MVP over excessive features.
-
-Do not create unnecessary authentication or complex backend infrastructure.
-
-Use realistic demo data so the application works immediately after launch.
-
-Make all buttons functional.
-
-Do not leave placeholder sections that look unfinished.
-
-The most important user journey is:
-
-Landing Page → Analyze → Threat Result → Explanation → Recommended Action
-
-Ensure this flow is fast, visually clear, and suitable for a live hackathon demonstration.
-
-Before finishing, test all major interactions and fix broken navigation, buttons, layouts, and responsive behavior.
-
-The final result should look like a real cybersecurity startup MVP rather than a generic template.
-
-This project was built with [Lovable](https://lovable.dev).
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/573650fc-6163-4e4a-b05a-8f260fd76918).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+```bash
 npm run dev
 ```
+
+The application will be available through the local development URL shown by Vite.
+
+---
+
+## 🧪 Example Tests
+
+### SAFE
+
+```text
+https://www.google.com
+```
+
+Expected:
+
+```text
+SAFE
+```
+
+### SUSPICIOUS
+
+```text
+Your account needs verification. Please verify your account immediately to avoid suspension.
+```
+
+Expected:
+
+```text
+SUSPICIOUS
+```
+
+### UNSAFE
+
+```text
+URGENT: Your bank account will be suspended today.
+Verify your password and OTP immediately at
+http://bank-security.example/verify
+```
+
+Expected:
+
+```text
+UNSAFE
+```
+
+> These examples are for testing the analyzer. Do not visit suspicious URLs.
+
+---
+
+## 🔐 Privacy
+
+CyberShield is designed around minimal input handling.
+
+Recent checks are stored locally in the browser rather than requiring a user account.
+
+The current version does **not** claim to provide definitive malware detection or replace professional security tools.
+
+A result represents the indicators detected by CyberShield's current analysis engine.
+
+---
+
+## 🚀 Future Scope
+
+CyberShield can be expanded with additional cybersecurity capabilities, including:
+
+- 🤖 AI-assisted threat analysis
+- 🔗 Reputation and threat-intelligence APIs
+- 🌐 Domain and DNS intelligence
+- 📧 Advanced email-header analysis
+- 🧠 Machine-learning-based phishing classification
+- 🖼️ Screenshot-based scam detection
+- 📱 Browser extension
+- 💻 Desktop/mobile applications
+- 🏢 Organization-level threat monitoring
+- 📈 Analytics dashboard
+- 🔔 Real-time threat alerts
+- 🗄️ Optional cloud-based analysis history
+
+The long-term goal is to evolve CyberShield from a simple analysis tool into a broader **personal cybersecurity awareness and protection platform**.
+
+---
+
+## 🎯 HackDay 1.0
+
+**Event:** HackDay 1.0  
+**Theme:** Tech for a Better Tomorrow  
+**Project:** CyberShield  
+**Category:** Cybersecurity
+
+### Core Idea
+
+> **Help people recognize digital threats before those threats become real-world breaches.**
+
+---
+
+## 👥 Team
+
+**It-A-tec**
+
+Built with a combination of human problem-solving, development, design, testing, and AI-assisted tools.
+
+---
+
+## 📄 License
+
+This project was created for HackDay 1.0.
+
+See the repository for the current project license and source code.
+
+---
+
+### 🛡️ CyberShield
+
+**Know the threat before it becomes a breach.**
